@@ -1,6 +1,6 @@
 
 ---
-**NOTE**: This package is currently maintained by ThearyCoding>.
+**NOTE**: This package is currently maintained by ThearyCoding.
 Originally created by ENGAPP.
 ---
 

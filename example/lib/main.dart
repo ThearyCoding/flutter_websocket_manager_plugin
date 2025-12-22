@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:websocket_manager/websocket_manager.dart';
+import 'package:flutter_websocket_manager_plugin/websocket_manager.dart';
 
 void main() => runApp(const MyApp());
 

@@ -1,11 +1,14 @@
-name: websocket_manager
-description: A Flutter plugin for Android and iOS supports websocket connection
-version: 0.2.2
-homepage: https://github.com/engapplabs/flutter_websocket_plugin
+name: flutter_websocket_manager_plugin
+description: A Flutter plugin that maintains WebSocket connections in background on Android and iOS.
+version: 1.0.0
+
+homepage: https://github.com/ThearyCoding/flutter_websocket_manager_plugin
+repository: https://github.com/ThearyCoding/flutter_websocket_manager_plugin
+issue_tracker: https://github.com/ThearyCoding/flutter_websocket_manager_plugin/issues
 
 environment:
   sdk: ">=2.17.0 <4.0.0"
-  flutter: ">=1.12.13+hotfix.5 <2.0.0"
+  flutter: ">=2.5.0"
 
 dependencies:
   flutter:
@@ -15,7 +18,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-# The following section is specific to Flutter.
 flutter:
   plugin:
     platforms:

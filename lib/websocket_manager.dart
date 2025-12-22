@@ -29,7 +29,7 @@ class WebsocketManager {
   static const EventChannel _eventChannelClose =
       EventChannel(_EVENT_CHANNEL_DONE);
 
-  // ✅ nullable for null-safety
+  // nullable for null-safety
   static StreamSubscription<dynamic>? _onMessageSubscription;
   static StreamSubscription<dynamic>? _onCloseSubscription;
   static Stream<dynamic>? _eventsMessage;
@@ -44,7 +44,7 @@ class WebsocketManager {
   }
 
   Future<void> _create() async {
-    // ✅ must return a Future
+    // must return a Future
     _channel.setMethodCallHandler((MethodCall call) async {
       switch (call.method) {
         case 'listen/message':

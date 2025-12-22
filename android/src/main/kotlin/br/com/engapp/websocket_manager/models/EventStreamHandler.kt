@@ -1,46 +1,34 @@
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
+package br.com.engapp.websocket_manager
+
 import android.util.Log
 import io.flutter.plugin.common.EventChannel
 
-class EventStreamHandler(onNullSink:()->Unit, onCancelCallback: () -> Unit) : EventChannel.StreamHandler {
+class EventStreamHandler(
+    private val onNullSink: () -> Unit,
+    private val onCancelCallback: () -> Unit
+) : EventChannel.StreamHandler {
 
     private var sink: EventChannel.EventSink? = null
 
-    private val onNullSink = onCancelCallback
-    private val onCancelCallback = onCancelCallback
-
-//    override fun onReceive(context: Context?, intent: Intent?) {
-//        Log.i("EventStreamHandler","onReceive")
-//        TODO("not implemented")
-//    }
-
-//    override fun onListen(arguments: Any, eventSink: EventChannel.EventSink) {
-//        Log.i("EventStreamHandler","event sink")
-//        this.sink = eventSink
-//    }
     override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
-        Log.i("onListen", "arguments: $arguments")
-        Log.i("EventStreamHandler","🔴 event sink")
-        this.sink = eventSink
+        Log.i("EventStreamHandler", "🔴 onListen arguments: $arguments")
+        sink = eventSink
     }
 
     override fun onCancel(arguments: Any?) {
-        Log.i("EventStreamHandler","onCancel")
-        this.sink = null
+        Log.i("EventStreamHandler", "onCancel")
+        sink = null
         onCancelCallback()
     }
 
-    fun send(data: Any?){
-        if (this.sink != null) {
-            Log.i("EventStreamHandler","✅ sink is not null")
+    fun send(data: Any?) {
+        val s = sink
+        if (s != null) {
+            Log.i("EventStreamHandler", "✅ sink is not null")
             try {
-                sink!!.success(data)
-            }catch (e: Exception){
-                Log.i("EventStreamHandler","Exception while trying to send data: $data")
-                Log.i("EventStreamHandler","Exception: ${e.message}")
-                println(e.message)
+                s.success(data)
+            } catch (e: Exception) {
+                Log.i("EventStreamHandler", "Exception while sending: ${e.message}")
             }
         } else {
             Log.i("EventStreamHandler", "❌ sink is null")

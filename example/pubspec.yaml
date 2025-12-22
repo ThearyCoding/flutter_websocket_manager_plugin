@@ -1,19 +1,16 @@
 name: websocket_manager_example
-description: Demonstrates how to use the websocket_manager plugin.
+description: Demonstrates how to use the flutter_websocket_manager_plugin.
 publish_to: 'none'
 version: 1.0.0+1
-
 
 environment:
   sdk: ">=2.17.0 <4.0.0"
 
 dependencies:
+  cupertino_icons: ^1.0.8
   flutter:
     sdk: flutter
-
-  cupertino_icons: ^1.0.8
-
-  websocket_manager:
+  flutter_websocket_manager_plugin:
     path: ../
 
 dev_dependencies:

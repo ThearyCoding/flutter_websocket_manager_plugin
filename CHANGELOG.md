@@ -1,3 +1,9 @@
+## 1.0.1 [2025-12-22]
+* iOS: rename podspec to flutter_websocket_manager_plugin.podspec
+* iOS: adjust WebsocketManagerPlugin.m import / registration
+* Remove obsolete websocket_manager.podspec
+* Lockfile updates
+
 ## 1.0.0 [2025-12-22]
 
 * Package maintenance taken over by ThearyCoding.

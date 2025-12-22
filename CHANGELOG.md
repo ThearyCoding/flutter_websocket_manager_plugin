@@ -1,3 +1,11 @@
+## 1.0.0 [2025-12-22]
+
+* Package maintenance taken over by ThearyCoding.
+* Updated repository, homepage, and issue tracker links.
+* Updated example project to match new package name.
+* Documentation and README updates.
+* No breaking API changes from previous versions.
+
 ## 0.2.2 [2020-02-28]
 
 * Migrate to the new android embedding.

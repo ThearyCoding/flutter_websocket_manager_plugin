@@ -101,7 +101,7 @@ class _MyAppState extends State<MyApp> {
                     child: const Text('LISTEN DONE'),
                   ),
                   ElevatedButton(
-                    onPressed: () => WebsocketManager.echoTest(),
+                    onPressed: () => socket?.echoTest(),
                     child: const Text('ECHO TEST'),
                   ),
                 ],

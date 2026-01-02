@@ -14,11 +14,16 @@ const String _METHOD_CHANNEL_TEST_ECHO = 'echoTest';
 
 /// Provides an easy way to create native websocket connection.
 class WebsocketManager {
-  WebsocketManager(this.url, [this.header]) {
+  WebsocketManager(
+    this.url, [
+    this.header,
+    this.autoReconnect = true,
+  ]) {
     _create();
   }
 
   final String url;
+  final bool autoReconnect;
 
   /// Optional headers passed to native platform.
   final Map<String, String>? header;
@@ -37,14 +42,13 @@ class WebsocketManager {
   static void Function(dynamic)? _messageCallback;
   static void Function(dynamic)? _closeCallback;
 
-  static Future<void> echoTest() async {
+   Future<void> echoTest() async {
     final result = await _channel.invokeMethod(_METHOD_CHANNEL_TEST_ECHO);
     // ignore: avoid_print
     print(result);
   }
 
   Future<void> _create() async {
-    // must return a Future
     _channel.setMethodCallHandler((MethodCall call) async {
       switch (call.method) {
         case 'listen/message':
@@ -59,11 +63,18 @@ class WebsocketManager {
 
     await _channel.invokeMethod(_METHOD_CHANNEL_CREATE, <String, dynamic>{
       'url': url,
-      'header': header, // can be null
+      'header': header,
+      'enableRetries': autoReconnect,
     });
+
+    await _enableAutoReconnect();
 
     _onMessage();
     _onClose();
+  }
+
+  Future<void> _enableAutoReconnect() async {
+    await _channel.invokeMethod('autoRetry', autoReconnect);
   }
 
   /// Creates a new WebSocket connection after instantiated [WebsocketManager].
@@ -130,7 +141,6 @@ class WebsocketManager {
   }
 
   void _closeListener(dynamic message) {
-    // ignore: avoid_print
     print(message);
     _closeCallback?.call(message);
   }

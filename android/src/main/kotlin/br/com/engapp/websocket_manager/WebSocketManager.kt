@@ -4,143 +4,115 @@ import android.os.Handler
 import android.os.Looper
 import okhttp3.*
 import okio.ByteString
-import java.util.*
+import kotlin.math.min
+import kotlin.math.pow
 
+class StreamWebSocketManager : WebSocketListener() {
 
-class StreamWebSocketManager: WebSocketListener() {
-
-
-    private val uiThreadHandler: Handler = Handler(Looper.getMainLooper())
-    private var ws: WebSocket? = null
+    private val uiHandler: Handler = Handler(Looper.getMainLooper())
     private val client = OkHttpClient()
+    private var ws: WebSocket? = null
     private var url: String? = null
-    private var header: Map<String,String>? = null
-    var updatesEnabled = false
+    private var header: Map<String, String>? = null
 
-    var messageCallback: ((String)->Unit)? = null
-    var closeCallback: ((String)->Unit)? = null
-    var conectedCallback: ((Boolean)->Unit)? = null
-    var openCallback: ((String)->Unit)? = null
+    var messageCallback: ((String) -> Unit)? = null
+    var closeCallback: ((String) -> Unit)? = null
+    var openCallback: ((String) -> Unit)? = null
+    var connectedCallback: ((Boolean) -> Unit)? = null
 
     var enableRetries: Boolean = true
+    private var reconnectAttempts = 0
+    private val maxReconnectDelay = 30L // seconds
+    private var isManuallyClosed = false
 
-    init {
-        // print(">>> Stream Manager Instantiated")
-        // Log.i("StreamWebSocketManager",">>> Stream Manager Instantiated")
-    }
-
-    override fun onOpen(webSocket: WebSocket, response: Response) {
-        // Log.i("StreamWebSocketManager","onOpen")
-        // Log.i("StreamWebSocketManager","is open callback null? ${openCallback == null}")
-        if(openCallback != null) {
-            uiThreadHandler.post {
-                openCallback!!(response.message)
-            }
-        }
-    }
-    override fun onMessage(webSocket: WebSocket, text: String) {
-        // Log.i("StreamWebSocketManager","onMessage text")
-        if(messageCallback != null) {
-            uiThreadHandler.post {
-                messageCallback!!(text)
-            }
-        }
-    }
-
-    override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-        // Log.i("StreamWebSocketManager","onMessage bytes")
-        //
-    }
-
-    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-        // Log.i("StreamWebSocketManager","🐞📀 onFailure ${t.message}")
-        // Log.i("StreamWebSocketManager","🐞 ${t.message}")
-        t.printStackTrace()
-        // Log.i("StreamWebSocketManager","🐞 closeCallback ${closeCallback != null}")
-        if (closeCallback != null) {
-            uiThreadHandler.post {
-                closeCallback!!("true")
-            }
-        }
-    }
-
-    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-        // Log.i("StreamWebSocketManager","onClosing")
-        if(this.enableRetries) {
-            this.connect()
-        } else {
-            uiThreadHandler.post {
-                if (closeCallback != null) {
-                    closeCallback!!("false")
-                }
-            }
-        }
-    }
-
-    fun echoTest() {
-        // Log.i("StreamWebSocketManager","init echoTest")
-        var messageNum = 0
-        fun send() {
-            messageNum+=1
-            val msg = "$messageNum: ${Date()}"
-            // print("send: $msg")
-            // Log.i("StreamWebSocketManager","send: $msg")
-            ws?.send(msg)
-        }
-        openCallback = fun (text: String): Unit {
-            send()
-        }
-        messageCallback = fun (text: String): Unit {
-            // print("recv: $text")
-            // Log.i("StreamWebSocketManager","recv: $text")
-            if(messageNum == 10) {
-                ws?.close(1000,null)
-            } else {
-                send()
-            }
-        }
-        closeCallback = fun (text: String): Unit {
-            // print("close $text")
-            // Log.i("StreamWebSocketManager","close $text")
-        }
-
-        url = "wss://echo.websocket.org"
-        connect()
-    }
-
-    fun create(url: String, header: Map<String,String>?) {
+    fun create(url: String, header: Map<String, String>?) {
         this.url = url
         this.header = header
+        reconnectAttempts = 0
+        isManuallyClosed = false
     }
 
     fun connect() {
-        //  Log.i("StreamWebSocketManager","Trying to connect")
-        val reqBuilder: Request.Builder = Request.Builder().url(url!!)
-        if(header != null) {
-            //  Log.i("StreamWebSocketManager","has headers")
-            for(key in header!!.keys) {
-                val value: String = (header!![key])!!
-                reqBuilder.addHeader(key, value)
-            }
-        }
-//        else {
-//            //  Log.i("StreamWebSocketManager","has no headers")
-//        }
-        val req: Request = reqBuilder.build()
-        //  Log.i("StreamWebSocketManager","method: ${req.method}")
-        //  Log.i("StreamWebSocketManager","url: ${req.url}")
-        ws = client.newWebSocket(req,this)
-//        client.dispatcher.executorService.shutdown()
+        if (url == null) return
+
+        val requestBuilder = Request.Builder().url(url!!)
+        header?.forEach { (key, value) -> requestBuilder.addHeader(key, value) }
+        val request = requestBuilder.build()
+        ws = client.newWebSocket(request, this)
     }
 
     fun disconnect() {
+        isManuallyClosed = true
         enableRetries = false
-        ws?.close(1000,null)
+        ws?.close(1000, "Manual disconnect")
     }
 
     fun send(msg: String) {
-        // Log.i("StreamWebSocketManager","⭕️ -> sending $msg")
-        // Log.i("StreamWebSocketManager","⭕️ -> ws is null? ${ws == null}")
         ws?.send(msg)
     }
+
+    // Optional echo test
+    fun echoTest() {
+        var count = 0
+        url = "wss://echo.websocket.org"
+        openCallback = { sendMessage(count++) }
+        messageCallback = {
+            if (count >= 10) disconnect() else sendMessage(count++)
+        }
+        connect()
+    }
+
+    private fun sendMessage(count: Int) {
+        val msg = "$count: ${System.currentTimeMillis()}"
+        ws?.send(msg)
+    }
+
+    // ---- WebSocketListener overrides ----
+
+    override fun onOpen(webSocket: WebSocket, response: Response) {
+        reconnectAttempts = 0
+        connectedCallback?.let { uiHandler.post { it(true) } }
+        openCallback?.let { uiHandler.post { it(response.message) } }
+    }
+
+    override fun onMessage(webSocket: WebSocket, text: String) {
+        messageCallback?.let { uiHandler.post { it(text) } }
+    }
+
+    override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+        // Handle binary messages if needed
+    }
+
+    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+        if (!isManuallyClosed && enableRetries) {
+            scheduleReconnect()
+        } else {
+            uiHandler.post { closeCallback?.invoke("closed") }
+        }
+    }
+
+    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+        uiHandler.post { connectedCallback?.invoke(false) }
+        if (!isManuallyClosed && enableRetries) {
+            scheduleReconnect()
+        } else {
+            uiHandler.post { closeCallback?.invoke("closed") }
+        }
+    }
+
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        t.printStackTrace()
+        uiHandler.post { closeCallback?.invoke("failed") }
+        if (!isManuallyClosed && enableRetries) {
+            scheduleReconnect()
+        }
+    }
+
+    private fun scheduleReconnect() {
+        reconnectAttempts++
+        val delay = min(2.0.pow(reconnectAttempts.toDouble()).toLong(), maxReconnectDelay)
+        uiHandler.postDelayed({ connect() }, delay * 1000)
+    }
+
+    fun isConnected(): Boolean = ws != null
 }

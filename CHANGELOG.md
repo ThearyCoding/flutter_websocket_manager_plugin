@@ -1,3 +1,9 @@
+## 1.0.2 - 2026-01-03
+
+- Added automatic reconnection with retry logic when connection fails or drops.
+- Renamed main library file to match package name (`flutter_websocket_manager_plugin.dart`).
+- Minor internal improvements and cleanup for initial publication.
+
 ## 1.0.1 [2025-12-22]
 * iOS: rename podspec to flutter_websocket_manager_plugin.podspec
 * iOS: adjust WebsocketManagerPlugin.m import / registration

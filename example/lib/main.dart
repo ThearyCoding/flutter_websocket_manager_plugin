@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_websocket_manager_plugin/websocket_manager.dart';
+import 'package:flutter_websocket_manager_plugin/flutter_websocket_plugin.dart';
 
 void main() => runApp(const MyApp());
 
@@ -12,7 +12,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final TextEditingController _urlController = TextEditingController(
-    // NOTE: echo.websocket.org is discontinued. Use a working public echo server:
     text: 'wss://ws.ifelse.io',
   );
 

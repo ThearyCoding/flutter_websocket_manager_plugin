@@ -1,6 +1,6 @@
 name: flutter_websocket_manager_plugin
 description: A Flutter plugin that maintains WebSocket connections in background on Android and iOS.
-version: 1.0.0
+version: 1.0.2
 
 homepage: https://github.com/ThearyCoding/flutter_websocket_manager_plugin
 repository: https://github.com/ThearyCoding/flutter_websocket_manager_plugin

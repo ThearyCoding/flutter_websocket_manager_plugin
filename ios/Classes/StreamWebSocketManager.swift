@@ -14,7 +14,7 @@ class StreamWebSocketManager: NSObject, WebSocketDelegate {
     var messageCallback: ((_ data: String) -> Void)?
     var closeCallback: ((_ data: String) -> Void)?
     var conectedCallback: ((_ data: Bool) -> Void)?
-
+    var errorCallback: ((_ data: String) -> Void)?
     var enableRetries: Bool = true
     private var reconnectAttempts = 0
     private let maxReconnectDelay: TimeInterval = 30
@@ -77,14 +77,23 @@ class StreamWebSocketManager: NSObject, WebSocketDelegate {
     func onClose() {
         ws?.onDisconnect = { [weak self] error in
             guard let self = self else { return }
+
             self.conectedCallback?(false)
+
+            // close event (existing behavior)
             self.closeCallback?(error != nil ? "false" : "true")
+
+            // error event
+            if let err = error {
+                self.errorCallback?(err.localizedDescription)
+            }
 
             if self.enableRetries && !self.isManuallyClosed {
                 self.reconnectWithDelay()
             }
         }
     }
+
 
     private func reconnectWithDelay() {
         reconnectAttempts += 1
@@ -117,8 +126,12 @@ class StreamWebSocketManager: NSObject, WebSocketDelegate {
         }
         ws?.connect()
     }
+    func errorHandler(msg: String) {
+        self.errorCallback?(msg)
+    }
 
- func websocketDidConnect(socket _: WebSocketClient) {
+
+    func websocketDidConnect(socket _: WebSocketClient) {
         //
     }
 

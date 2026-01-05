@@ -5,6 +5,7 @@ enum ChannelName {
     static let onMessage: String = "websocket_manager/message"
     static let onDone: String = "websocket_manager/done"
     static let status: String = "websocket_manager/status"
+    static let onError: String = "websocket_manager/error"
 }
 
 @available(iOS 9.0, *)
@@ -13,7 +14,7 @@ public class SwiftWebsocketManagerPlugin: NSObject, FlutterPlugin {
     let closeStreamHandler = EventStreamHandler()
     let statusStreamHandler = EventStreamHandler()
     let streamWebSocketManager = StreamWebSocketManager()
-
+    let errorStreamHandler = EventStreamHandler()
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "websocket_manager", binaryMessenger: registrar.messenger())
         let instance = SwiftWebsocketManagerPlugin()
@@ -32,6 +33,8 @@ public class SwiftWebsocketManagerPlugin: NSObject, FlutterPlugin {
             .setStreamHandler(closeStreamHandler)
         FlutterEventChannel(name: ChannelName.status, binaryMessenger: registrar.messenger())
             .setStreamHandler(statusStreamHandler)
+        FlutterEventChannel(name: ChannelName.onError, binaryMessenger: registrar.messenger()) // ✅ add
+            .setStreamHandler(errorStreamHandler)
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -49,6 +52,7 @@ public class SwiftWebsocketManagerPlugin: NSObject, FlutterPlugin {
                                           enableRetries: enableRetries!)
 
             streamWebSocketManager.closeCallback = closeHandler
+            streamWebSocketManager.errorCallback = errorHandler
             streamWebSocketManager.onClose()
             result("")
         } else if call.method == "connect" {
@@ -85,10 +89,18 @@ public class SwiftWebsocketManagerPlugin: NSObject, FlutterPlugin {
             streamWebSocketManager.onClose()
             result("")
         }
+        else if call.method == "onError" {
+            streamWebSocketManager.errorCallback = errorHandler
+            result("")
+        }
+
     }
 
     func resultHander(msg: String) {
         messageStreamHandler.send(data: msg)
+    }
+    func errorHandler(msg: String) {
+        errorStreamHandler.send(data: msg)
     }
 
     func closeHandler(msg: String) {

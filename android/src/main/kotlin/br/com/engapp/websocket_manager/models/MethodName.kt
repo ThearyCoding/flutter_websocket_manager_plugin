@@ -13,5 +13,8 @@ class MethodName {
         const val TEST_ECHO = "echoTest"
         const val LISTEN_MESSAGE = "listen/message"
         const val LISTEN_CLOSE = "listen/close"
+        const val ON_ERROR = "onError"
+        const val LISTEN_ERROR = "listen/error"
+
     }
 }

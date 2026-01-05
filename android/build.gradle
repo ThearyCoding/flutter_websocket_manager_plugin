@@ -34,8 +34,6 @@ apply plugin: 'kotlin-android'
 android {
     namespace "br.com.engapp.websocket_manager"
     compileSdkVersion 28
-
-    // ✅ make Java target consistent
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

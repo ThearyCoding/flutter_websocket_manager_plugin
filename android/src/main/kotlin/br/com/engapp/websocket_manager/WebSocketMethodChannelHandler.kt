@@ -38,6 +38,8 @@ class WebSocketMethodChannelHandler(
                 websocketManager.send(message)
                 result.success("")
             }
+            MethodName.ON_ERROR -> result.success("")
+
 
             MethodName.AUTO_RETRY -> {
                 val retry: Boolean = call.arguments<Boolean?>() ?: true

@@ -13,7 +13,7 @@ class WebsocketManagerPlugin : FlutterPlugin {
     private var methodChannel: MethodChannel? = null
     private var messageChannel: EventChannel? = null
     private var doneChannel: EventChannel? = null
-
+    private var errorChannel: EventChannel? = null
     private val messageStreamHandler =
         EventStreamHandler(this::onListenMessageCallback, this::onCancelCallback)
 
@@ -26,7 +26,8 @@ class WebsocketManagerPlugin : FlutterPlugin {
         setupChannels(binding.binaryMessenger, binding.applicationContext)
         setupCallbacks()
     }
-
+    private val errorStreamHandler =                                  
+            EventStreamHandler(this::onListenErrorCallback, this::onCancelCallback)
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         teardownChannels()
         websocketManager.disconnect()
@@ -41,21 +42,26 @@ class WebsocketManagerPlugin : FlutterPlugin {
 
         doneChannel = EventChannel(messenger, ChannelName.DONE)
         doneChannel!!.setStreamHandler(closeStreamHandler)
+        errorChannel = EventChannel(messenger, ChannelName.ERROR)       
+        errorChannel!!.setStreamHandler(errorStreamHandler)           
     }
 
     private fun teardownChannels() {
         methodChannel?.setMethodCallHandler(null)
         messageChannel?.setStreamHandler(null)
         doneChannel?.setStreamHandler(null)
+        errorChannel?.setStreamHandler(null)                           
 
         methodChannel = null
         messageChannel = null
         doneChannel = null
+        errorChannel = null                                            
     }
 
     private fun setupCallbacks() {
         websocketManager.messageCallback = { msg -> messageStreamHandler.send(msg) }
         websocketManager.closeCallback = { msg -> closeStreamHandler.send(msg) }
+        websocketManager.errorCallback = { msg -> errorStreamHandler.send(msg) }
     }
 
     private fun handleMethodCall(call: io.flutter.plugin.common.MethodCall, result: MethodChannel.Result) {
@@ -94,7 +100,7 @@ class WebsocketManagerPlugin : FlutterPlugin {
             MethodName.ON_MESSAGE -> result.success("") // already handled via callback
 
             MethodName.ON_DONE -> result.success("") // already handled via callback
-
+            MethodName.ON_ERROR -> result.success("")
             MethodName.TEST_ECHO -> {
                 websocketManager.echoTest()
                 result.success("echo test started")
@@ -111,8 +117,11 @@ class WebsocketManagerPlugin : FlutterPlugin {
     private fun onListenCloseCallback() {
         methodChannel?.invokeMethod(MethodName.LISTEN_CLOSE, null)
     }
-
+    private fun onListenErrorCallback() {                  
+        methodChannel?.invokeMethod(MethodName.LISTEN_ERROR, null)
+    }
     private fun onCancelCallback() {
         // no-op
     }
+
 }
